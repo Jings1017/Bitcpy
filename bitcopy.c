@@ -5,46 +5,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-void v2_bitcpy(void *_dest,      /* Address of the buffer to write to */
-            size_t _write,    /* Bit offset to start writing to */
-            const void *_src, /* Address of the buffer to read from */
-            size_t _read,     /* Bit offset to start reading from */
-            size_t count)
-{
-    const uint8_t MASK[8] = { 1, 3, 7, 15, 31, 63, 127, 255 };
-    uint8_t *src = (uint8_t *)_src + (_read >> 3);
-    uint8_t src_off = _read & 7;
-    uint8_t *dest = (uint8_t *)_dest + (_write >> 3);
-    uint8_t dest_off = _write & 7;
-    size_t offset = src_off - dest_off;
-    
-    count -= (8 - dest_off);
-    
-    int counter = count >> 3;
-    int remaining = (count & 7);
-
-    /* step 1 */
-
-    uint8_t data  = (*src++ << offset) ;
-    data |= (*src >> (8 - offset));
-    data &= MASK[7 - dest_off];
-    *dest &= ~MASK[7 - dest_off];  // new 
-    *dest++ |= data;
-    
-    /* step 2 */
-
-    while (counter-- > 0){
-        *dest++ = (*src++ << offset) | ((*src >> (8 - offset)) & MASK[offset - 1]);
-    }
-
-    /* step 3 */
-
-    if (remaining >= 0) {
-        *dest &= MASK[7-remaining]; // new 
-        *dest |= (((*src++ << offset) | (*src >> (8 - offset))) & (~MASK[7 - remaining]));
-    }
-}
-
 void v1_bitcpy(void *_dest,      /* Address of the buffer to write to */
             size_t _write,    /* Bit offset to start writing to */
             const void *_src, /* Address of the buffer to read from */
